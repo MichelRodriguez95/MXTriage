@@ -58,8 +58,8 @@ MXTriage is a specialized Red Team toolkit for comprehensive email infrastructur
 
 ### Installation
 ```bash
-git clone https://github.com/yourusername/mxtriage.git
-cd mxtriage
+git clone https://github.com/MichelRodriguez95/MXTriage.git
+cd MXTriage
 pip install -r requirements.txt
 ```
 
