@@ -50,6 +50,8 @@ MXTriage is a specialized Red Team toolkit for comprehensive email infrastructur
 - **Attack Roadmap** - Automated vulnerability prioritization
 - **Exploitation Guidance** - Specific attack methods for each finding
 - **Severity Scoring** - CRITICAL/HIGH/MEDIUM/LOW classification
+- **Admit multiple domains** Scan multiple domains in a list with -l
+- **JSON Result** - Save the result in a json to use it later with the other toos (-s option)
 - **Professional Reporting** - Color-coded console output
 
 ## 🚨 Use Cases
