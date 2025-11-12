@@ -16,24 +16,30 @@ MXTriage is a specialized Red Team toolkit for comprehensive email infrastructur
 - **Single Point of Failure Detection** - Identify lack of redundancy
 - **Vulnerable Mail Server Detection** - Flag potentially exploitable services
 - **Infrastructure Mapping** - Complete email delivery path analysis
+- **Subdomain Takeover check** - Scan for Subdomain Takeover
 
 ### 🛡️ SPF Vulnerability Assessment
 - **Policy Analysis** - Detect `+all`, `~all`, `?all` misconfigurations
 - **Mechanism Auditing** - Identify broad `a/`mx` mechanisms
 - **Include Chain Analysis** - Trace and audit SPF dependencies
 - **IP Range Evaluation** - Flag overly permissive CIDR ranges
+- **Subdomain SPF** - Check if subdomain have vulnerable SPF record
+- **And Much More**
 
 ### 🔐 DKIM Security Audit
 - **Selector Discovery** - 200+ built-in selectors with intelligent scanning
 - **Cryptographic Analysis** - RSA key strength and algorithm validation
 - **Configuration Testing** - Test mode detection and policy evaluation
 - **Header Security** - Critical header signing verification
+- **And Much More**
 
 ### 🛡️ DMARC Policy Evaluation
 - **Policy Enforcement** - `none`/`quarantine`/`reject` analysis
 - **Subdomain Protection** - SP policy gap detection
 - **Reporting Configuration** - Missing aggregate/advisory reports
 - **Alignment Verification** - Strict vs relaxed alignment checks
+- **Subdomain DMARC** - Check if subdomain have vulnerable DMARC record
+- **And Much More**
 
 ### 🎯 Enterprise Protection Detection
 - **Service Identification** - Proofpoint, Mimecast, Microsoft Defender, etc.
