@@ -5,63 +5,128 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🚀 Overview
+# 🔴 MX Infrastructure Security Analyzer
 
-MXTriage is a specialized Red Team toolkit for comprehensive email infrastructure assessment. Unlike generic DNS tools, MXTriage focuses on identifying exploitable vulnerabilities in enterprise email configurations for authorized penetration testing and security research.
+## A comprehensive email security assessment tool that performs deep analysis of MX infrastructure, SPF, DKIM, DMARC configurations, and subdomain takeover vulnerabilities.
 
-## 🔍 Features
+# 🚀 Features
+## 🔴 MX Infrastructure Analysis
 
-### 🔴 MX Infrastructure Analysis
-- **MX Server Enumeration** - Discover and prioritize mail servers
-- **Single Point of Failure Detection** - Identify lack of redundancy
-- **Vulnerable Mail Server Detection** - Flag potentially exploitable services
-- **Infrastructure Mapping** - Complete email delivery path analysis
-- **Subdomain Takeover check** - Scan for Subdomain Takeover
+   ### MX Server Enumeration - Discover and prioritize mail servers
 
-### 🛡️ SPF Vulnerability Assessment
-- **Policy Analysis** - Detect `+all`, `~all`, `?all` misconfigurations
-- **Mechanism Auditing** - Identify broad `a/`mx` mechanisms
-- **Include Chain Analysis** - Trace and audit SPF dependencies
-- **IP Range Evaluation** - Flag overly permissive CIDR ranges
-- **Subdomain SPF** - Check if subdomain have vulnerable SPF record
-- **And Much More**
+   ### Single Point of Failure Detection - Identify lack of redundancy
 
-### 🔐 DKIM Security Audit
-- **Selector Discovery** - 200+ built-in selectors with intelligent scanning
-- **Cryptographic Analysis** - RSA key strength and algorithm validation
-- **Configuration Testing** - Test mode detection and policy evaluation
-- **Header Security** - Critical header signing verification
-- **And Much More**
+   ### Vulnerable Mail Server Detection - Flag potentially exploitable services
 
-### 🛡️ DMARC Policy Evaluation
-- **Policy Enforcement** - `none`/`quarantine`/`reject` analysis
-- **Subdomain Protection** - SP policy gap detection
-- **Reporting Configuration** - Missing aggregate/advisory reports
-- **Alignment Verification** - Strict vs relaxed alignment checks
-- **Subdomain DMARC** - Check if subdomain have vulnerable DMARC record
-- **And Much More**
+   ### Infrastructure Mapping - Complete email delivery path analysis
 
-### 🎯 Enterprise Protection Detection
-- **Service Identification** - Proofpoint, Mimecast, Microsoft Defender, etc.
-- **Bypass Difficulty** - High/Medium/Low categorization
-- **Attack Vector Mapping** - Service-specific evasion techniques
+   ### Subdomain Takeover Check - Comprehensive subdomain takeover vulnerability scanning
 
-### 📊 Red Team Intelligence
-- **Attack Roadmap** - Automated vulnerability prioritization
-- **Exploitation Guidance** - Specific attack methods for each finding
-- **Severity Scoring** - CRITICAL/HIGH/MEDIUM/LOW classification
-- **Admit multiple domains** Scan multiple domains in a list with -l
-- **JSON Result** - Save the result in a json to use it later with the other toos (-s option)
-- **Professional Reporting** - Color-coded console output
+## 🛡️ SPF Vulnerability Assessment
+
+   ### Policy Analysis - Detect +all, ~all, ?all misconfigurations
+
+   ### Mechanism Auditing - Identify broad a/mx mechanisms
+
+   ### Include Chain Analysis - Trace and audit SPF dependencies
+
+   ### IP Range Evaluation - Flag overly permissive CIDR ranges
+
+   ### Subdomain SPF - Check if subdomains have vulnerable SPF records
+
+   ### DNS Lookup Limits - Detect SPF records exceeding 10 DNS lookup limit
+
+   ### Recursive Analysis - Deep analysis of SPF include chains
+
+   ### Unregistered Domain Detection - Find unregistered domains in SPF chains
+
+## 🔐 DKIM Security Audit
+
+   ### Selector Discovery - 200+ built-in selectors with intelligent scanning
+
+   ### Cryptographic Analysis - RSA key strength and algorithm validation
+
+   ### Configuration Testing - Test mode detection and policy evaluation
+
+   ### Header Security - Critical header signing verification
+
+   ### Key Strength Assessment - RSA key size validation (512-bit to 4096-bit)
+
+   ### Algorithm Security - SHA1 vs SHA256 algorithm detection
+
+   ### Alignment Verification - DKIM alignment with mail servers
+
+## 🛡️ DMARC Policy Evaluation
+
+   ### Policy Enforcement - none/quarantine/reject analysis
+
+   ### Subdomain Protection - SP policy gap detection
+
+   ### Reporting Configuration - Missing aggregate/forensic reports
+
+   ### Alignment Verification - Strict vs relaxed alignment checks
+
+   ### Subdomain DMARC - Check if subdomains have vulnerable DMARC records
+
+   ### Reporting Frequency - Analyze report intervals and configurations
+
+   ### External Report Authorization - Verify external DMARC reporting setup
+
+## 🎯 Enterprise Protection Detection
+
+   ### Service Identification - Proofpoint, Mimecast, Microsoft Defender, Cisco IronPort, FireEye, FortiMail, Barracuda, Sophos, Trend Micro, Symantec, McAfee, Forcepoint
+
+   ### Bypass Difficulty - High/Medium/Low categorization
+
+   ### Attack Vector Mapping - Service-specific evasion techniques
+
+   ### MX Pattern Recognition - Advanced detection of security service MX records
+
+   ### SPF Include Analysis - Identify security services through SPF includes
+
+## 🔍 Security Detection Assessment
+
+   ### Enterprise Email Security Detection - Microsoft Defender, Proofpoint, Mimecast, FireEye, Barracuda, Symantec, Trend Micro, McAfee, Sophos, Forcepoint
+
+   ### DNS Security Monitoring - Advanced DNS configurations and security records
+
+   ### Threat Intelligence Integration - Domain verification and security service indicators
+
+   ### Strict Authentication Policies - DMARC reject/quarantine policies, strict alignment
+
+   ### Risk Assessment - HIGH/MEDIUM/LOW detection risk classification
+
+## 📊 Red Team Intelligence
+
+   ### Attack Roadmap - Automated vulnerability prioritization
+
+   ### Exploitation Guidance - Specific attack methods for each finding
+
+   ### Severity Scoring - CRITICAL/HIGH/MEDIUM/LOW classification
+
+   ### Multiple Domain Support - Scan multiple domains in a list with -l
+
+   ### JSON Results - Save results in JSON format for later analysis (-s option)
+
+   ### Professional Reporting - Color-coded console output
+
+   ### Detection Risk Assessment - Evaluate blue team detection capabilities
 
 ## 🚨 Use Cases
 
-- **Red Team Engagements** - Email infrastructure penetration testing
-- **Security Assessments** - Proactive email security auditing
-- **Bug Bounty Recon** - Quick identification of low-hanging fruit
-- **Incident Response** - Forensic analysis of email attack vectors
-- **Security Research** - Academic and professional email security studies
+   ### Red Team Engagements - Email infrastructure penetration testing
 
+   ### Security Assessments - Proactive email security auditing
+
+   ### Bug Bounty Recon - Quick identification of low-hanging fruit
+
+   ### Incident Response - Forensic analysis of email attack vectors
+
+   ### Security Research - Academic and professional email security studies
+
+   ### Blue Team Defense - Identify security gaps in email infrastructure
+
+  ### Compliance Auditing - Verify email authentication compliance
 ## ⚡ Quick Start
 
 ### Installation
