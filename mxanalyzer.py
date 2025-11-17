@@ -6,7 +6,8 @@ import signal
 import requests
 import json
 import time
-
+import ipaddress
+import base64
 
 class Colors:
     if sys.stdout.isatty() and os.name != 'nt':
@@ -61,54 +62,216 @@ def print_good(text):
 def print_info(text):
     print(f"{Colors.BLUE}{text}{Colors.END}")
 
-
-def load_takeover_fingerprints(json_file_path="fingerprints.json"):
-    try:
-        if os.path.exists(json_file_path):
-            with open(json_file_path, 'r', encoding='utf-8') as f:
-                fingerprints = json.load(f)
-                return fingerprints
-        return download_fingerprints_from_github()
-    except Exception as e:
-        return get_default_fingerprints()
-
-
-def download_fingerprints_from_github():
-    url = "https://raw.githubusercontent.com/EdOverflow/can-i-take-over-xyz/master/fingerprints.json"
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        fingerprints = response.json()
-        return fingerprints
-    except Exception as e:
-        return get_default_fingerprints()
-
-
 def get_default_fingerprints():
+    print_info("Using extended default fingerprints")
     return [
         {
             "service": "AWS S3",
-            "cname": ["s3.amazonaws.com"],
+            "cname": ["s3.amazonaws.com", "s3-website-us-east-1.amazonaws.com", "s3-website."],
             "fingerprint": "NoSuchBucket",
             "status": "vulnerable",
             "vulnerable": True
         },
         {
             "service": "GitHub Pages",
-            "cname": ["github.io"],
+            "cname": ["github.io", "github.map.fastly.net"],
             "fingerprint": "There isn't a GitHub Pages site here",
             "status": "vulnerable",
             "vulnerable": True
         },
         {
             "service": "Heroku",
-            "cname": ["herokuapp.com"],
+            "cname": ["herokuapp.com", "herokussl.com"],
             "fingerprint": "No such app",
             "status": "vulnerable",
             "vulnerable": True
         },
+        {
+            "service": "Shopify",
+            "cname": ["myshopify.com"],
+            "fingerprint": "Sorry, this shop is currently unavailable",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Fastly",
+            "cname": ["fastly.net"],
+            "fingerprint": "Fastly error: unknown domain",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Azure Blob Storage",
+            "cname": ["blob.core.windows.net"],
+            "fingerprint": "ResourceNotFound",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Google Cloud Storage",
+            "cname": ["storage.googleapis.com", "c.storage.googleapis.com"],
+            "fingerprint": "NoSuchBucket",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Bitbucket",
+            "cname": ["bitbucket.io"],
+            "fingerprint": "Repository not found",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "AWS CloudFront",
+            "cname": [".cloudfront.net"],
+            "fingerprint": "ERROR: The request could not be satisfied",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "AWS Elastic Beanstalk",
+            "cname": [".elasticbeanstalk.com"],
+            "fingerprint": "404 Not Found",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Readme.io",
+            "cname": ["readme.io"],
+            "fingerprint": "Project doesnt exist... yet!",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Ghost.io",
+            "cname": ["ghost.io"],
+            "fingerprint": "The thing you were looking for is no longer here",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Pantheon",
+            "cname": ["pantheonsite.io"],
+            "fingerprint": "The gods are wise",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Zendesk",
+            "cname": ["zendesk.com"],
+            "fingerprint": "Help Center Closed",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Unbounce",
+            "cname": ["unbounce.com"],
+            "fingerprint": "The requested URL was not found on this server",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Intercom",
+            "cname": ["custom.intercom.help"],
+            "fingerprint": "This page is reserved for magical things",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Worksites",
+            "cname": ["worksites.net"],
+            "fingerprint": "Hello! Sorry, but the website you&rsquo;re looking for doesn&rsquo;t exist.",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Agile CRM",
+            "cname": ["agilecrm.com"],
+            "fingerprint": "Sorry, this page is no longer available.",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Aftership",
+            "cname": ["aftership.com"],
+            "fingerprint": "Oops.</h2><p class=\"text-muted text-tight\">The page you're looking for doesn't exist.",
+            "status": "vulnerable",
+            "vulnerable": True
+        },
+        {
+            "service": "Aha",
+            "cname": ["aha.io"],
+            "fingerprint": "There is no portal here ... sending you back to Aha!",
+            "status": "vulnerable",
+            "vulnerable": True
+        }
     ]
 
+
+def download_fingerprints_from_github():
+
+    urls = [
+        "https://raw.githubusercontent.com/EdOverflow/can-i-take-over-xyz/master/fingerprints.json",
+        "https://raw.githubusercontent.com/EdOverflow/can-i-take-over-xyz/gh-pages/fingerprints.json",
+        "https://cdn.jsdelivr.net/gh/EdOverflow/can-i-take-over-xyz@master/fingerprints.json"
+    ]
+
+    for url in urls:
+        try:
+            print_info(f"Trying to download fingerprints from: {url}")
+            print()
+            response = requests.get(url, timeout=15)
+            response.raise_for_status()
+
+            fingerprints = response.json()
+            if fingerprints and len(fingerprints) > 0:
+                print_good(f"Successfully downloaded {len(fingerprints)} fingerprints from {url}")
+                return fingerprints
+            else:
+                print(f"{Colors.ORANGE}Empty response from {url}{Colors.END}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"{Colors.ORANGE}Failed to download from {url}: {e}{Colors.END}")
+            continue
+        except json.JSONDecodeError as e:
+            print(f"{Colors.ORANGE}Invalid JSON from {url}: {e}{Colors.END}")
+            continue
+        except Exception as e:
+            print(f"{Colors.ORANGE}Unexpected error from {url}: {e}{Colors.END}")
+            continue
+
+    print(f"{Colors.RED}All download attempts failed, using default fingerprints{Colors.END}")
+    return get_default_fingerprints()
+
+
+def load_takeover_fingerprints(json_file_path="fingerprints.json"):
+
+    try:
+        if os.path.exists(json_file_path):
+            print_info(f"Loading takeover fingerprints from: {json_file_path}")
+            with open(json_file_path, 'r', encoding='utf-8') as f:
+                fingerprints = json.load(f)
+                if fingerprints:
+                    print_good(f"Loaded {len(fingerprints)} takeover fingerprints from local file")
+                    return fingerprints
+
+        print_info("Local fingerprints not found, downloading from GitHub...")
+        fingerprints = download_fingerprints_from_github()
+
+        if fingerprints:
+            try:
+                with open(json_file_path, 'w', encoding='utf-8') as f:
+                    json.dump(fingerprints, f, indent=2, ensure_ascii=False)
+                print_good(f"Downloaded and saved {len(fingerprints)} fingerprints to {json_file_path}")
+            except Exception as e:
+                print(f"{Colors.RED}Warning: Could not save fingerprints to file: {e}{Colors.END}")
+
+        return fingerprints
+
+    except Exception as e:
+        print(f"{Colors.RED}Error loading takeover fingerprints: {e}{Colors.END}")
+        print(f"{Colors.ORANGE}Falling back to default fingerprints{Colors.END}")
+        return get_default_fingerprints()
 
 def check_http_fingerprint(domain, fingerprint):
     result = {
@@ -149,6 +312,13 @@ def check_http_fingerprint(domain, fingerprint):
 def check_subdomain_takeover(domain, fingerprints=None):
     if fingerprints is None:
         fingerprints = load_takeover_fingerprints()
+        if not fingerprints:
+            print(f"{Colors.RED}Error: No fingerprints available for takeover detection{Colors.END}")
+            return {
+                'domain': domain,
+                'vulnerable': False,
+                'error_message': 'No fingerprints available'
+            }
 
     result = {
         'domain': domain,
@@ -215,7 +385,11 @@ def subdomain_takeover_scan(domain, subdomains=None):
     if not subdomains:
         return []
 
+    print_info(f"Loading takeover fingerprints for {len(subdomains)} subdomains...")
     fingerprints = load_takeover_fingerprints()
+    print_good(f"Using {len(fingerprints)} fingerprints for takeover detection")
+    print()
+
     takeover_vulnerabilities = []
 
     total = len(subdomains)
@@ -312,6 +486,312 @@ def get_spf_record(domain):
     return None
 
 
+def is_ip_overlap(ip1, ip2):
+
+    try:
+        network1 = ipaddress.ip_network(ip1, strict=False)
+        network2 = ipaddress.ip_network(ip2, strict=False)
+        return network1.overlaps(network2)
+    except ValueError:
+        return False
+
+
+def check_spf_recursive(domain, max_depth=10, current_depth=0, visited=None):
+
+    if visited is None:
+        visited = set()
+
+    if current_depth > max_depth:
+        return {
+            'lookup_count': 0,
+            'error': f"Max recursion depth exceeded ({max_depth})"
+        }
+
+    if domain in visited:
+        return {
+            'lookup_count': 0,
+            'error': f"Circular reference detected for domain {domain}"
+        }
+
+    visited.add(domain)
+
+    result = {
+        'lookup_count': 1,
+        'includes': [],
+        'errors': []
+    }
+
+    try:
+        resolver = setup_dns_resolver()
+        spf_records = resolver.resolve(domain, 'TXT')
+        spf_record = None
+
+        for rdata in spf_records:
+            record = ''.join([str(txt) for txt in rdata.strings])
+            if "v=spf1" in record:
+                spf_record = record
+                break
+
+        if not spf_record:
+            result['errors'].append(f"No SPF record found for {domain}")
+            return result
+
+        parts = spf_record.split()
+
+        for part in parts:
+            if part.startswith("include:"):
+                included_domain = part[8:]
+                result['includes'].append(included_domain)
+
+                included_result = check_spf_recursive(
+                    included_domain,
+                    max_depth,
+                    current_depth + 1,
+                    visited.copy()
+                )
+
+                result['lookup_count'] += included_result.get('lookup_count', 0)
+
+                if 'error' in included_result:
+                    result['errors'].append(included_result['error'])
+
+                if 'errors' in included_result:
+                    result['errors'].extend(included_result['errors'])
+
+            elif part.startswith("redirect="):
+                redirect_domain = part[9:]
+
+                redirect_result = check_spf_recursive(
+                    redirect_domain,
+                    max_depth,
+                    current_depth + 1,
+                    visited.copy()
+                )
+
+                result['lookup_count'] += redirect_result.get('lookup_count', 0)
+
+                if 'error' in redirect_result:
+                    result['errors'].append(redirect_result['error'])
+
+                if 'errors' in redirect_result:
+                    result['errors'].extend(redirect_result['errors'])
+
+            elif part.startswith("a:") or part == "a":
+                result['lookup_count'] += 1
+
+            elif part.startswith("mx:") or part == "mx":
+                result['lookup_count'] += 1
+
+            elif part.startswith("ptr:") or part == "ptr":
+                result['lookup_count'] += 1
+
+    except Exception as e:
+        result['errors'].append(f"Error checking SPF for {domain}: {str(e)}")
+
+    return result
+
+
+def check_spf_unregistered_domains(spf_record, domain, max_depth=5, current_depth=0, visited=None):
+
+    if visited is None:
+        visited = set()
+
+    if current_depth > max_depth or domain in visited:
+        return []
+
+    visited.add(domain)
+    vulnerabilities = []
+    unregistered_domains = []
+
+    includes = re.findall(r'include:([^\s]+)', spf_record)
+    redirects = re.findall(r'redirect=([^\s]+)', spf_record)
+
+    all_domains = includes + redirects
+
+    for test_domain in all_domains:
+        try:
+            dns.resolver.resolve(test_domain, 'A')
+
+            try:
+                test_spf = get_spf_record(test_domain)
+                if test_spf and test_spf != 'TIMEOUT':
+                    recursive_vulns = check_spf_unregistered_domains(
+                        test_spf, test_domain, max_depth, current_depth + 1, visited.copy()
+                    )
+                    vulnerabilities.extend(recursive_vulns)
+            except Exception:
+                pass
+
+        except dns.resolver.NXDOMAIN:
+            unregistered_domains.append(test_domain)
+        except (dns.resolver.NoAnswer, dns.resolver.Timeout):
+            continue
+        except Exception:
+            continue
+
+    if unregistered_domains:
+        vulnerabilities.append({
+            'type': 'SPF_UNREGISTERED_DOMAINS',
+            'severity': 'CRITICAL',
+            'description': f'Unregistered domains in SPF chain: {", ".join(unregistered_domains)}',
+            'solution': 'Remove unregistered domains from SPF or register them',
+            'attack_methods': [
+                'Attacker can register the domain and configure malicious SPF',
+                'Complete SPF bypass by controlling included domains',
+                'Legitimate email spoofing through domain registration',
+                'Permanent backdoor into email authentication'
+            ]
+        })
+
+    return vulnerabilities
+
+
+def check_dkim_alignment(domain):
+
+    alignment_info = {
+        'domain': domain,
+        'mx_records': [],
+        'alignment_issues': [],
+        'recommendations': []
+    }
+
+    try:
+        mx_answers = dns.resolver.resolve(domain, 'MX')
+
+        for rdata in mx_answers:
+            mx_domain = str(rdata.exchange).rstrip('.')
+            alignment_info['mx_records'].append(mx_domain)
+
+            if not mx_domain.endswith(domain):
+                alignment_info['alignment_issues'].append(
+                    f"Mail server {mx_domain} is not aligned with {domain}"
+                )
+
+                try:
+                    mx_base_domain = '.'.join(mx_domain.split('.')[-2:])
+                    dkim_selectors = dselectors()[:500]
+
+                    dkim_found = False
+                    for selector in dkim_selectors:
+                        dkim_record = f"{selector}._domainkey.{mx_base_domain}"
+                        try:
+                            dns.resolver.resolve(dkim_record, 'TXT')
+                            dkim_found = True
+                            break
+                        except:
+                            continue
+
+                    if not dkim_found:
+                        alignment_info['recommendations'].append(
+                            f"Configure DKIM for mail server {mx_domain}"
+                        )
+                except Exception:
+                    alignment_info['recommendations'].append(
+                        f"Verify DKIM configuration for mail server {mx_domain}"
+                    )
+
+    except Exception as e:
+        alignment_info['alignment_issues'].append(f"Error checking MX records: {str(e)}")
+
+    return alignment_info
+
+
+def estimate_key_size(key_length):
+
+    if key_length < 100:
+        return 512
+    elif key_length < 200:
+        return 1024
+    elif key_length < 400:
+        return 2048
+    else:
+        return 4096
+
+
+def analyze_dkim_record_detailed(selector, record_data, domain):
+
+    dkim_details = {
+        'selector': selector,
+        'domain': domain,
+        'version': None,
+        'key_type': None,
+        'key_size': None,
+        'hash_algorithms': [],
+        'testing_mode': False,
+        'services': [],
+        'flags': [],
+        'security_level': 'None',
+        'issues': [],
+        'recommendations': []
+    }
+
+    record_lower = record_data.lower()
+
+    fields = {}
+    for field in record_data.split(';'):
+        field = field.strip()
+        if '=' in field:
+            key, value = field.split('=', 1)
+            fields[key.strip()] = value.strip()
+
+    if 'v' in fields:
+        dkim_details['version'] = fields['v']
+        if fields['v'] != 'DKIM1':
+            dkim_details['issues'].append(f"Non-standard DKIM version: {fields['v']}")
+            dkim_details['recommendations'].append("Use standard DKIM version (DKIM1)")
+
+    if 'k' in fields:
+        dkim_details['key_type'] = fields['k']
+        if fields['k'] not in ['rsa', 'ed25519']:
+            dkim_details['issues'].append(f"Non-standard key type: {fields['k']}")
+            dkim_details['recommendations'].append("Use standard key types (rsa or ed25519)")
+    else:
+        dkim_details['key_type'] = 'rsa'
+
+    if 'p' in fields and fields['p']:
+        key_length = len(fields['p'])
+        estimated_size = estimate_key_size(key_length)
+        dkim_details['key_size'] = estimated_size
+
+        if estimated_size < 1024:
+            dkim_details['issues'].append(f"Weak key size (estimated {estimated_size} bits)")
+            dkim_details['recommendations'].append("Use at least 2048-bit RSA keys")
+            dkim_details['security_level'] = 'Low'
+        elif estimated_size < 2048:
+            dkim_details['issues'].append(f"Moderate key size (estimated {estimated_size} bits)")
+            dkim_details['recommendations'].append("Consider upgrading to 2048-bit or higher")
+            dkim_details['security_level'] = 'Medium'
+        else:
+            dkim_details['security_level'] = 'High'
+
+    if 'h' in fields:
+        algorithms = fields['h'].split(':')
+        dkim_details['hash_algorithms'] = algorithms
+
+        if 'sha1' in algorithms and 'sha256' not in algorithms:
+            dkim_details['issues'].append("Uses weak SHA-1 algorithm without SHA-256")
+            dkim_details['recommendations'].append("Use SHA-256 hash algorithm")
+            if dkim_details['security_level'] == 'High':
+                dkim_details['security_level'] = 'Medium'
+
+    if 't' in fields and 'y' in fields['t']:
+        dkim_details['testing_mode'] = True
+        dkim_details['issues'].append("DKIM in testing mode")
+        dkim_details['recommendations'].append("Disable testing mode for production")
+        dkim_details['security_level'] = 'Low'
+
+    if 's' in fields:
+        services = fields['s'].split(':')
+        dkim_details['services'] = services
+
+        if '*' in services:
+            dkim_details['flags'].append("All services allowed")
+        elif 'email' not in services:
+            dkim_details['issues'].append("May not be configured for email service")
+            dkim_details['recommendations'].append("Add email service to allowed services")
+
+    return dkim_details
+
 def check_spf_recursion_loops(spf_record, domain, visited=None):
     vulnerabilities = []
     if visited is None:
@@ -352,18 +832,18 @@ def check_spf_recursion_loops(spf_record, domain, visited=None):
 
 def dselectors():
     all_selectors = [
-        'google', 'gmail', 'gsuite', 'workspace', 'googlemail',
+        'google', 'gmail', 'gsuite', 'workspace',
         'selector1', 'selector2', 'selector3', 'outlook', 'microsoft', 'office365', 'exchange',
-        'k1', 'k2', 'k3', 'ses', 'amazon', 'aws',
-        's1', 's2', 's3', 'sendgrid', 'sg',
+        'k1', 'k2', 'k3', 'ses', 'amazon', 'aws', 'k4', 'k5', 'k6', 'k7', 'k8', 'k9', 'k0', 'k10',
+        's1', 's2', 's3', 'sendgrid', 'sg', 's4', 's5', 's6', 's7', 's8', 's9', 's0', 's10',
         'mandrill', 'mailchimp', 'mc', 'chimp',
         'mg', 'mailgun', 'email',
         'pm', 'postmark', 'pmk1',
         'sparkpost', 'sp', 'spk1',
         'zoho', 'zmail', 'zm',
         'yahoo', 'ymail', 'aol',
-        'apple', 'icloud', 'mac',
-        'protonmail', 'proton',
+        'apple', 'icloud', 'mac', 'google', 'googlemail', 'googleapi', 'gapi', 'googleapis', 'gapis',
+        'protonmail', 'proton', 'mxvault', 'mxv',
         'fastmail', 'fm',
         'hubspot', 'hs',
         'activecampaign', 'ac',
@@ -381,7 +861,7 @@ def dselectors():
         'dk', 'dk1', 'dk2', 'dk3', 'key1', 'key2', 'key3',
         'sig', 'sig1', 'sign', 'signature',
         'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
-        '2023', '2024', '2025', '2022', '2021',
+        '2023', '2024', '2025', '2022', '2021', '2025',
         'spring', 'summer', 'fall', 'winter',
         'mail', 'smtp', 'mx', 'mx1', 'mx2', 'mx3',
         'server', 'srv', 'srv1', 'srv2',
@@ -461,6 +941,24 @@ def detect_protections(domain):
             'spf_patterns': ['include:_spf.trendmicro.com'],
             'description': 'Trend Micro Email Security',
             'bypass_difficulty': 'MEDIUM'
+        },
+        'Symantec': {
+            'mx_patterns': ['.symantec.com', '.messagelabs.com', '.symcb.com'],
+            'spf_patterns': ['include:_spf.symantec.com', 'include:spf.messagelabs.com'],
+            'description': 'Symantec Email Security (now Broadcom)',
+            'bypass_difficulty': 'MEDIUM'
+        },
+        'McAfee': {
+            'mx_patterns': ['.mcafee.com', '.mxcloud.com', '.mximail.com'],
+            'spf_patterns': ['include:_spf.mcafee.com', 'include:spf.mxcloud.com'],
+            'description': 'McAfee Email Security',
+            'bypass_difficulty': 'MEDIUM'
+        },
+        'Forcepoint': {
+            'mx_patterns': ['.forcepoint.com', '.websense.com', '.tfrcmm.com'],
+            'spf_patterns': ['include:_spf.forcepoint.com', 'include:spf.websense.com'],
+            'description': 'Forcepoint Email Security',
+            'bypass_difficulty': 'MEDIUM'
         }
     }
 
@@ -538,6 +1036,14 @@ def get_mx_servers(domain):
                 'ips': ips
             })
         mx_servers.sort(key=lambda x: x['priority'])
+        print()
+        print_low(f"Found {len(mx_servers)} MX servers:")
+        print()
+        for i, mx in enumerate(mx_servers, 1):
+            print(f"  {i}. {mx['server']} (Priority: {mx['priority']})")
+            for ip in mx['ips']:
+                print(f"     IP: {ip}")
+        print()
 
         if len(mx_servers) == 1:
             vulnerabilities.append({
@@ -548,7 +1054,7 @@ def get_mx_servers(domain):
                 'attack_methods': [
                     'Targeted DDoS against single mail server',
                     'Single server compromise affects all email',
-                    'No failover for email delivery'
+                    'No failare you for email delivery'
                 ]
             })
 
@@ -571,6 +1077,7 @@ def get_mx_servers(domain):
                     vulnerabilities.append(vuln)
 
         return mx_servers, vulnerabilities
+
     except dns.resolver.NoAnswer:
         vuln = {
             'type': 'NO_MX_RECORDS',
@@ -584,8 +1091,11 @@ def get_mx_servers(domain):
             ]
         }
         vulnerabilities.append(vuln)
+        print_critical("No MX records found")
+        print()
         return [], vulnerabilities
-    except Exception:
+    except Exception as e:
+        print(f"Error resolving MX records: {e}")
         return [], vulnerabilities
 
 
@@ -605,9 +1115,60 @@ def spf_scan(domain):
                 break
 
         if spf_record:
-            print("SPF Record Fund:")
+            print("SPF Record Found:")
+            print()
             print_low(f"SPF Record: {spf_record}")
             print()
+
+        if spf_record:
+            unregistered_vulns = check_spf_unregistered_domains(spf_record, domain)
+            vulnerabilities.extend(unregistered_vulns)
+
+        if spf_record:
+            recursive_result = check_spf_recursive(domain)
+
+            if recursive_result.get('error'):
+                vulnerabilities.append({
+                    'type': 'SPF_RECURSION_ERROR',
+                    'severity': 'HIGH',
+                    'description': f'SPF recursion error: {recursive_result["error"]}',
+                    'solution': 'Fix SPF include/redirect chains to remove circular references',
+                    'attack_methods': [
+                        'SPF PermError during validation',
+                        'Email delivery failures',
+                        'Inconsistent email authentication'
+                    ]
+                })
+
+            lookup_count = recursive_result.get('lookup_count', 0)
+            if lookup_count > 10:
+                vulnerabilities.append({
+                    'type': 'SPF_DNS_LOOKUP_LIMIT_EXCEEDED',
+                    'severity': 'CRITICAL',
+                    'description': f'SPF exceeds DNS lookup limit ({lookup_count} > 10)',
+                    'solution': 'Reduce number of DNS lookups in SPF record',
+                    'attack_methods': [
+                        'SPF validation failures',
+                        'Email rejection due to PermError',
+                        'DoS through DNS lookup exhaustion'
+                    ]
+                })
+
+            ip4_ranges = re.findall(r'ip4:([\d./]+)', spf_record)
+            for i, ip1 in enumerate(ip4_ranges):
+                for j, ip2 in enumerate(ip4_ranges):
+                    if i < j and is_ip_overlap(ip1, ip2):
+                        vulnerabilities.append({
+                            'type': 'SPF_IP_RANGE_OVERLAP',
+                            'severity': 'LOW',
+                            'description': f'Overlapping IP ranges in SPF: {ip1} and {ip2}',
+                            'solution': 'Consolidate overlapping IP ranges',
+                            'attack_methods': [
+                                'Redundant SPF mechanisms',
+                                'Inefficient SPF evaluation',
+                                'Potential configuration confusion'
+                            ]
+                        })
 
         test_subdomains = [
             f"test-{random.randint(100000, 999999)}.{domain}",
@@ -794,6 +1355,19 @@ def spf_scan(domain):
                     'Relies on other security measures'
                 ]
             })
+        elif not 'all' in spf_record:
+            vulnerabilities.append({
+                'type': 'NO_ALL_MECHANISM',
+                'severity': 'HIGH',
+                'description': 'There is no all mechanism in the record. It may be possible'
+                  ' to spoof the domain without causing an SPF failure',
+                'solution': 'Add -all mechanism for strict rejection',
+                'attack_methods': [
+                    'Emails may be delivered to spam folder',
+                    'No SPF Failure',
+                    'Not protection mechanism'
+                ]
+            })
         elif re.search(r'[\s+]?~\s*all\s*', spf_lower):
             vulnerabilities.append({
                 'type': 'SOFTFAIL_POLICY',
@@ -806,6 +1380,9 @@ def spf_scan(domain):
                     'Not a complete protection mechanism'
                 ]
             })
+        elif re.search(r'[\s+]?-\s*all\s*', spf_lower):
+            print_good("SPF policy: STRICT (-all) - Good configuration")
+            print()
 
         mechanisms = re.findall(r'([+~?\-]?)\s*([a-z][^:\s]*)', spf_record)
         mechanism_names = [mech[1] for mech in mechanisms]
@@ -843,6 +1420,7 @@ def spf_scan(domain):
                                     'Dependency attack vector'
                                 ]
                             })
+
             except dns.resolver.Timeout:
                 vulnerabilities.append({
                     'type': 'DNS_TIMEOUT',
@@ -914,6 +1492,7 @@ def spf_scan(domain):
                     ]
                 })
 
+
         suspicious = analyze_suspicious_txt_records(all_txt_records)
         for suspicious_rec in suspicious:
             vulnerabilities.append({
@@ -958,15 +1537,12 @@ def spf_scan(domain):
 
     return vulnerabilities
 
-
 def dmarc_scan(domain):
     vulnerabilities = []
-
     try:
         dmarc_domain = f"_dmarc.{domain}"
         answers = dns.resolver.resolve(dmarc_domain, 'TXT')
         dmarc_record = None
-
         for rdata in answers:
             record = ''.join([str(txt) for txt in rdata.strings])
             if 'v=DMARC1' in record:
@@ -974,10 +1550,129 @@ def dmarc_scan(domain):
                 break
         if dmarc_record:
             print("DMARC Record Found:")
+            print()
             print_low(f"DMARC Record: {dmarc_record}")
             print()
+        if dmarc_record:
+            fields = {}
+            for field in dmarc_record.split(';'):
+                field = field.strip()
+                if '=' in field:
+                    key, value = field.split('=', 1)
+                    fields[key.strip()] = value.strip()
 
-        if not dmarc_record:
+            adkim_value = fields.get('adkim', 'r')
+            if adkim_value == 's':
+                print_good("DMARC DKIM Alignment: strict")
+            else:
+                vulnerabilities.append({
+                    'type': 'RELAXED_DKIM_ALIGNMENT',
+                    'severity': 'MEDIUM',
+                    'description': 'DKIM alignment set to relaxed (adkim=r) – allows subdomain spoofing',
+                    'solution': 'Set adkim=s for strict alignment',
+                    'attack_methods': [
+                        'Subdomain email spoofing may pass DMARC',
+                        'Weaker sender validation',
+                        'Easier phishing via subdomains'
+                    ]
+                })
+
+            aspf_value = fields.get('aspf', 'r')
+            if aspf_value == 's':
+                print_good("DMARC SPF Alignment: strict")
+            else:
+                vulnerabilities.append({
+                    'type': 'RELAXED_SPF_ALIGNMENT',
+                    'severity': 'MEDIUM',
+                    'description': 'SPF alignment set to relaxed (aspf=r) – allows subdomain spoofing',
+                    'solution': 'Set aspf=s for strict alignment',
+                    'attack_methods': [
+                        'Subdomain spoofing with valid SPF may pass DMARC',
+                        'Reduced domain ownership enforcement',
+                        'Email impersonation via delegated subdomains'
+                    ]
+                })
+
+            fo_value = fields.get('fo', '0')
+            if fo_value == '0':
+                vulnerabilities.append({
+                    'type': 'DMARC_FAILURE_REPORTING_LIMITED',
+                    'severity': 'LOW',
+                    'description': 'DMARC only reports when ALL mechanisms fail (fo=0) – reduces visibility',
+                    'solution': 'Use fo=1 to report on ANY mechanism failure',
+                    'attack_methods': [
+                        'Partial authentication bypasses go undetected',
+                        'Limited forensic data for incident response'
+                    ]
+                })
+            elif fo_value == '1':
+                print_good("DMARC Failure Reporting: reports on any mechanism failure (fo=1)")
+            else:
+                print_info(f"DMARC Failure Reporting: custom policy ({fo_value})")
+
+            if 'rf' in fields:
+                print_info(f"DMARC Report Format: {fields['rf']}")
+
+            ri_seconds = int(fields.get('ri', '86400'))
+            if ri_seconds > 86400:
+                vulnerabilities.append({
+                    'type': 'DMARC_INFREQUENT_REPORTING',
+                    'severity': 'LOW',
+                    'description': f'DMARC reports sent every {ri_seconds} seconds ({ri_seconds//3600}h) – too infrequent',
+                    'solution': 'Set ri=86400 (24h) or lower for timely alerts',
+                    'attack_methods': [
+                        'Delayed detection of spoofing campaigns',
+                        'Reduced operational visibility'
+                    ]
+                })
+            else:
+
+                pass
+
+            if 'rua' in fields:
+                rua_addresses = fields['rua'].split(',')
+                for address in rua_addresses:
+                    if 'mailto:' in address:
+                        email = address.split('mailto:')[1]
+                        email_domain = email.split('@')[1]
+                        if email_domain != domain and not email_domain.endswith('.' + domain):
+                            try:
+                                auth_domain = f"{domain}._report._dmarc.{email_domain}"
+                                auth_records = dns.resolver.resolve(auth_domain, 'TXT')
+                                auth_found = False
+                                for auth_rdata in auth_records:
+                                    auth_record = ''.join([str(txt) for txt in auth_rdata.strings])
+                                    if 'v=DMARC1' in auth_record:
+                                        auth_found = True
+                                        break
+                                if not auth_found:
+                                    vulnerabilities.append({
+                                        'type': 'MISSING_EXTERNAL_REPORT_AUTH',
+                                        'severity': 'MEDIUM',
+                                        'description': f'Missing authorization record for external DMARC reports to {email_domain}',
+                                        'solution': f'Add TXT record {auth_domain} with value "v=DMARC1"',
+                                        'attack_methods': [
+                                            'External reports may be rejected',
+                                            'Loss of DMARC reporting visibility',
+                                            'Incomplete email security monitoring'
+                                        ]
+                                    })
+                            except dns.resolver.NXDOMAIN:
+                                vulnerabilities.append({
+                                    'type': 'MISSING_EXTERNAL_REPORT_AUTH',
+                                    'severity': 'MEDIUM',
+                                    'description': f'Missing authorization record for external DMARC reports to {email_domain}',
+                                    'solution': f'Add TXT record {domain}._report._dmarc.{email_domain} with value "v=DMARC1"',
+                                    'attack_methods': [
+                                        'External reports may be rejected',
+                                        'Loss of DMARC reporting visibility',
+                                        'Incomplete email security monitoring'
+                                    ]
+                                })
+                            except Exception:
+                                pass
+        else:
+
             vulnerabilities.append({
                 'type': 'NO_DMARC_RECORD',
                 'severity': 'HIGH',
@@ -1018,6 +1713,9 @@ def dmarc_scan(domain):
                         'Less protection than reject policy'
                     ]
                 })
+            elif policy == 'reject':
+                print_good("DMARC policy: REJECT - Good configuration")
+                print()
 
         sp_match = re.search(r'sp=([^;]+)', dmarc_record)
         if sp_match:
@@ -1053,7 +1751,6 @@ def dmarc_scan(domain):
             'notifications', 'alerts', 'noreply', 'contact', 'info',
             'support', 'help', 'service', 'admin', 'administrator'
         ]
-
         subs_without_dmarc = []
         for sub in email_related_subdomains:
             subdomain = f"{sub}.{domain}"
@@ -1067,7 +1764,6 @@ def dmarc_scan(domain):
                         exists = True
                     except:
                         exists = False
-
                 if exists:
                     sub_dmarc_domain = f"_dmarc.{subdomain}"
                     try:
@@ -1076,7 +1772,6 @@ def dmarc_scan(domain):
                         subs_without_dmarc.append(subdomain)
             except Exception:
                 continue
-
         if subs_without_dmarc:
             vulnerabilities.append({
                 'type': 'ACTIVE_SUBDOMAINS_WITHOUT_DMARC',
@@ -1090,17 +1785,16 @@ def dmarc_scan(domain):
                 ]
             })
 
-        rua_match = re.search(r'rua=([^;]+)', dmarc_record)
-        if not rua_match:
+        if 'rua' not in fields:
             vulnerabilities.append({
                 'type': 'NO_DMARC_REPORTING',
                 'severity': 'LOW',
-                'description': 'No DMARC reporting configured',
-                'solution': 'Add rua tag for DMARC report reception',
+                'description': 'No DMARC aggregate reporting configured (missing rua)',
+                'solution': 'Add rua=mailto:security@yourdomain.com to receive reports',
                 'attack_methods': [
-                    'No visibility into authentication failures',
-                    'Cannot monitor spoofing attempts',
-                    'Limited forensic capabilities'
+                    'No visibility into spoofing attempts',
+                    'Blind to email authentication failures',
+                    'Inability to improve email security posture'
                 ]
             })
 
@@ -1120,30 +1814,6 @@ def dmarc_scan(domain):
                     ]
                 })
 
-        if 'aspf=r' not in dmarc_record:
-            vulnerabilities.append({
-                'type': 'RELAXED_SPF_ALIGNMENT',
-                'severity': 'MEDIUM',
-                'description': 'SPF alignment set to relaxed instead of strict',
-                'solution': 'Consider using aspf=s for strict SPF alignment',
-                'attack_methods': [
-                    'Subdomain spoofing might pass SPF alignment',
-                    'Weaker domain alignment verification'
-                ]
-            })
-
-        if 'adkim=r' not in dmarc_record:
-            vulnerabilities.append({
-                'type': 'RELAXED_DKIM_ALIGNMENT',
-                'severity': 'MEDIUM',
-                'description': 'DKIM alignment set to relaxed instead of strict',
-                'solution': 'Consider using adkim=s for strict DKIM alignment',
-                'attack_methods': [
-                    'Subdomain DKIM might pass alignment',
-                    'Weaker domain alignment verification'
-                ]
-            })
-
     except dns.resolver.NXDOMAIN:
         vulnerabilities.append({
             'type': 'NO_DMARC_RECORD',
@@ -1156,7 +1826,6 @@ def dmarc_scan(domain):
                 'No email authentication enforcement'
             ]
         })
-
     except dns.resolver.NoAnswer:
         vulnerabilities.append({
             'type': 'NO_DMARC_RECORD',
@@ -1169,7 +1838,6 @@ def dmarc_scan(domain):
                 'No email authentication enforcement'
             ]
         })
-
     except dns.resolver.Timeout:
         vulnerabilities.append({
             'type': 'DMARC_CHECK_TIMEOUT',
@@ -1181,7 +1849,6 @@ def dmarc_scan(domain):
                 'May indicate DNS filtering or network issues'
             ]
         })
-
     except Exception as e:
         error_str = str(e).lower()
         if 'nxdomain' in error_str:
@@ -1207,9 +1874,7 @@ def dmarc_scan(domain):
                     'Proceed with standard email authentication testing'
                 ]
             })
-
     return vulnerabilities
-
 
 def dkimscan(domain, max_selectors=None):
     selectors = dselectors()
@@ -1243,21 +1908,70 @@ def dkimscan(domain, max_selectors=None):
 
         print(f"\r{Colors.GREEN}[{bar}]{Colors.END} {percent}% ({i + 1}/{total})", end='', flush=True)
 
-    print()
+    print("\n")
     return dkimfound
 
 
 def dkimvulnscan(domain, selector, record_data):
+
     print()
     print_low(f"Analyzing: {selector}._domainkey.{domain}")
     print_low(f"Record: {record_data}")
     print()
+
     vulns = []
     record_lower = record_data.lower()
 
-    if re.search(r'\bt=y\b', record_lower):
+    dkim_details = analyze_dkim_record_detailed(selector, record_data, domain)
+
+    for issue in dkim_details['issues']:
+        severity = 'MEDIUM'
+        if dkim_details['security_level'] == 'Low':
+            severity = 'HIGH'
+        elif 'weak' in issue.lower() or 'testing mode' in issue.lower():
+            severity = 'HIGH'
+
         vulns.append({
-            'type': 'TESTING_MODE',
+            'type': 'DKIM_CONFIGURATION_ISSUE',
+            'severity': severity,
+            'description': issue,
+            'solution': dkim_details['recommendations'][dkim_details['issues'].index(issue)] if dkim_details[
+                'recommendations'] else 'Review DKIM configuration',
+            'attack_methods': [
+                'Potential DKIM bypass due to misconfiguration',
+                'Email spoofing attacks',
+                'Reduced email authentication effectiveness'
+            ]
+        })
+
+    if dkim_details.get('key_size'):
+        if dkim_details['key_size'] < 1024:
+            vulns.append({
+                'type': 'WEAK_DKIM_KEY',
+                'severity': 'CRITICAL',
+                'description': f'Very weak RSA key (estimated {dkim_details["key_size"]} bits)',
+                'solution': 'Use RSA keys of at least 2048 bits',
+                'attack_methods': [
+                    'RSA key factorization attacks',
+                    'Brute force private key calculation',
+                    'DKIM signature forgery'
+                ]
+            })
+        elif dkim_details['key_size'] < 2048:
+            vulns.append({
+                'type': 'MODERATE_DKIM_KEY',
+                'severity': 'HIGH',
+                'description': f'RSA key of ~{dkim_details["key_size"]} bits - below current standard',
+                'solution': 'Upgrade to 2048-bit RSA key or higher',
+                'attack_methods': [
+                    'Computational attacks on RSA-1024',
+                    'Future proofing attacks as computing power increases'
+                ]
+            })
+
+    if dkim_details['testing_mode']:
+        vulns.append({
+            'type': 'DKIM_TESTING_MODE',
             'severity': 'MEDIUM',
             'description': 'DKIM in testing mode (t=y) - receivers may ignore signature failures',
             'solution': 'Remove t=y for production',
@@ -1267,6 +1981,22 @@ def dkimvulnscan(domain, selector, record_data):
                 'Test malicious email templates without triggering alerts'
             ]
         })
+
+    if 'sha1' in dkim_details['hash_algorithms'] and 'sha256' not in dkim_details['hash_algorithms']:
+        vulns.append({
+            'type': 'WEAK_HASH_ALGORITHM',
+            'severity': 'HIGH',
+            'description': 'Uses SHA1 algorithm which is considered weak',
+            'solution': 'Update to use SHA-256 algorithm',
+            'attack_methods': [
+                'SHA1 collision attacks',
+                'Hash length extension attacks',
+                'Cryptographic brute force attacks'
+            ]
+        })
+
+    if re.search(r'\bt=y\b', record_lower) or re.search(r'\bt=Y\b', record_lower):
+        pass
 
     g_match = re.search(r'\bg=([^;]+)', record_lower)
     if g_match:
@@ -1521,6 +2251,13 @@ def generate_attack_roadmap(spf_vulns, dmarc_vulns, dkim_vulns, mx_vulns, takeov
         for takeover in takeover_vulns:
             roadmap.append(f"  - {takeover['domain']} -> {takeover['service']}")
 
+    has_unregistered_spf = any('SPF_UNREGISTERED_DOMAINS' in v['type'] for v in spf_vulns)
+
+    if has_unregistered_spf:
+        roadmap.append("CRITICAL: UNREGISTERED DOMAINS IN SPF CHAIN")
+        roadmap.append("Attack vector: Register the unregistered domains and configure malicious SPF records")
+        roadmap.append("Impact: Complete email spoofing bypass - most critical finding")
+
     has_no_spf = any(v['type'] == 'NO_SPF_RECORD' for v in spf_vulns)
     has_spf_weak = any(v['type'] in ['PASS_ALL_POLICY', 'NEUTRAL_ALL_POLICY', 'SOFTFAIL_POLICY'] for v in spf_vulns)
     has_no_dmarc = any(v['type'] == 'NO_DMARC_RECORD' for v in dmarc_vulns)
@@ -1604,6 +2341,7 @@ def scan_domain(domain, max_selectors=500, enable_takeover_scan=True, no_output=
         }
     }
 
+
     if not no_output:
         print("\n" + "=" * 50)
         print("DNS & INFRASTRUCTURE ANALYSIS")
@@ -1626,19 +2364,13 @@ def scan_domain(domain, max_selectors=500, enable_takeover_scan=True, no_output=
     mx_servers, mx_vulns = get_mx_servers(domain)
     scan_results['mxanalyzer']['mx_servers'] = mx_servers
     total_vulnerabilities += len(mx_vulns)
+    if not no_output and mx_vulns:
+        for vuln in mx_vulns:
+            print_vulnerability(vuln)
     for vuln in mx_vulns:
         vulnerability_breakdown[vuln['severity']] += 1
         sources_breakdown['MX'].append(vuln['type'])
         scan_results['mxanalyzer']['sources_breakdown']['MX'].append(vuln['type'])
-
-    if not no_output and mx_servers:
-        print()
-        print_low(f"Found {len(mx_servers)} MX servers:")
-        print()
-        for i, mx in enumerate(mx_servers, 1):
-            print(f"  {i}. {mx['server']} (Priority: {mx['priority']})")
-            for ip in mx['ips']:
-                print(f"     IP: {ip}")
 
     if enable_takeover_scan:
         if not no_output:
@@ -1660,6 +2392,7 @@ def scan_domain(domain, max_selectors=500, enable_takeover_scan=True, no_output=
         if not no_output:
             if takeover_vulns:
                 print_critical(f"Found {len(takeover_vulns)} vulnerable subdomains:")
+                print()
                 for result in takeover_vulns:
                     print_critical(f"VULNERABLE: {result['domain']}")
                     print(f"   Service: {result['service']}")
@@ -1667,8 +2400,12 @@ def scan_domain(domain, max_selectors=500, enable_takeover_scan=True, no_output=
                     print(f"   Status: {result['status']}")
                     if result['fingerprint']:
                         print(f"   Fingerprint: {result['fingerprint']}")
+                    if result['response_body']:
+                        print(f"   Response: {result['response_body']}")
+                    print()
             else:
                 print_good("No subdomain takeover issues detected")
+                print()
 
     if not no_output:
         print("\n" + "=" * 50)
@@ -1682,6 +2419,7 @@ def scan_domain(domain, max_selectors=500, enable_takeover_scan=True, no_output=
     if not no_output:
         if email_protections:
             print_low("Detected Email Security Services:")
+            print()
             for protection in email_protections:
                 severity = protection['bypass_difficulty']
                 if severity == 'HIGH':
@@ -1690,8 +2428,13 @@ def scan_domain(domain, max_selectors=500, enable_takeover_scan=True, no_output=
                     print_medium(f"  {protection['service']} - {protection['type']}")
                 else:
                     print_low(f"  {protection['service']} - {protection['type']}")
-                print(f"     Description: {protection['description']}")
-        else:
+                    print(f"     Description: {protection['description']}")
+                    print(f"     Bypass Difficulty: {protection['bypass_difficulty']}")
+                    print(f"     Detection: {protection['detection_method']}")
+                    if 'server' in protection:
+                        print(f"     Server: {protection['server']}")
+                    print()
+    else:
             print_good("No enterprise email security services detected")
 
     if not no_output:
@@ -1749,7 +2492,7 @@ def scan_domain(domain, max_selectors=500, enable_takeover_scan=True, no_output=
     dkim_records = dkimscan(domain, max_selectors)
     if not dkim_records:
         no_dkim_vuln = {
-            'type': 'NO_DKIM_RECORDS',
+            'type': 'NO_DKIM_RECORDS -  NOTE: Maybe not found but not 100$ secure',
             'severity': 'HIGH',
             'description': 'Domain has no DKIM records - no email signing authentication',
             'solution': 'Implement DKIM for email signing and authentication',
@@ -1786,6 +2529,38 @@ def scan_domain(domain, max_selectors=500, enable_takeover_scan=True, no_output=
                 print_good(f"   Secure configuration for selector: {dkim['selector']}")
 
     scan_results['mxanalyzer']['dkim_vulnerabilities'] = dkim_vulns
+
+    if not no_output:
+        print("\n" + "-" * 20)
+        print("DKIM ALIGNMENT ANALYSIS")
+        print("-" * 20)
+        print()
+
+    dkim_alignment = check_dkim_alignment(domain)
+    if dkim_alignment['alignment_issues']:
+        for issue in dkim_alignment['alignment_issues']:
+
+            alignment_vulnerability = {
+                'type': 'DKIM_ALIGNMENT_ISSUE',
+                'severity': 'MEDIUM',
+                'description': issue,
+                'solution': 'Ensure mail servers are properly aligned with domain',
+                'attack_methods': [
+                    'Email authentication inconsistencies',
+                    'Potential DMARC alignment failures',
+                    'Reduced email deliverability'
+                ]
+            }
+            dkim_vulns.append(alignment_vulnerability)
+            total_vulnerabilities += 1
+            vulnerability_breakdown['MEDIUM'] += 1
+            sources_breakdown['DKIM'].append('DKIM_ALIGNMENT_ISSUE')
+            scan_results['mxanalyzer']['sources_breakdown']['DKIM'].append('DKIM_ALIGNMENT_ISSUE')
+
+        for recommendation in dkim_alignment['recommendations']:
+            print_info(f"Recommendation: {recommendation}")
+    else:
+        print_good("DKIM alignment: Good - Mail servers properly aligned")
 
     attack_roadmap = generate_attack_roadmap(spf_vulns, dmarc_vulns, dkim_vulns, mx_vulns, takeover_vulns,
                                              email_protections)
